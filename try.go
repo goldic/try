@@ -3,6 +3,7 @@ package try
 import (
 	"errors"
 	"fmt"
+	"log"
 	"runtime"
 	"sync"
 )
@@ -60,14 +61,21 @@ func Require(statement bool, err any) {
 	}
 }
 
-// Catch recovers and returns error by argument pointer.
-func Catch(err *error) {
-	if r := recover(); r != nil && err != nil {
-		if *err == nil {
-			*err = toError(r)
-		} else {
-			*err = errors.Join(*err, toError(r))
+// Catch recovers error and call fn error-handler.
+func Catch(fn func(err error)) {
+	if r := recover(); r != nil {
+		fn(toError(r))
+	}
+}
+
+// Recover recovers and sets error by err pointer.
+func Recover(err *error) {
+	if r := recover(); r != nil {
+		if err == nil { // log error
+			log.Printf("Panic: %v", r)
+			return
 		}
+		*err = joinErrors(*err, toError(r))
 	}
 }
 
@@ -78,7 +86,7 @@ func Mute() {
 
 // Call runs the function safely, recovers panic-error.
 func Call(fn func()) (err error) {
-	defer Catch(&err)
+	defer Recover(&err)
 	fn()
 	return
 }
@@ -92,10 +100,17 @@ func Go(fn func()) {
 func Async(fn ...func()) (err error) {
 	var wg sync.WaitGroup
 	wg.Add(len(fn))
+	var mxErr sync.Mutex
 	for _, f := range fn {
 		go func(fn func()) {
 			defer wg.Done()
-			defer Catch(&err)
+			defer func() {
+				if r := recover(); r != nil {
+					mxErr.Lock()
+					defer mxErr.Unlock()
+					err = joinErrors(err, toError(r))
+				}
+			}()
 			fn()
 		}(f)
 	}
@@ -108,6 +123,13 @@ func toError(err any) error {
 		return e
 	}
 	return fmt.Errorf("%v", err)
+}
+
+func joinErrors(a, b error) error {
+	if a == nil {
+		return b
+	}
+	return errors.Join(a, b)
 }
 
 func checkErr(err error) {
