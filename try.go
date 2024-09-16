@@ -61,15 +61,15 @@ func Require(statement bool, err any) {
 	}
 }
 
-// Catch recovers error and call fn error-handler.
-func Catch(fn func(err error)) {
+// Handle recovers error and call fn error-handler.
+func Handle(fn func(err error)) {
 	if r := recover(); r != nil {
 		fn(toError(r))
 	}
 }
 
-// Recover recovers and sets error by err pointer.
-func Recover(err *error) {
+// Catch recovers and sets error by err pointer.
+func Catch(err *error) {
 	if r := recover(); r != nil {
 		if err == nil { // log error
 			log.Printf("Panic: %v", r)
@@ -86,7 +86,7 @@ func Mute() {
 
 // Call runs the function safely, recovers panic-error.
 func Call(fn func()) (err error) {
-	defer Recover(&err)
+	defer Catch(&err)
 	fn()
 	return
 }
