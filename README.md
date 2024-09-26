@@ -1,18 +1,12 @@
 # try
 
-A lightweight error-handling library for Go that simplifies error checking and handling of panics. Inspired by
-the `try-catch` pattern from other languages, this library allows you to streamline your code and reduce
-repetitive `if err != nil` blocks.
+A lightweight error-handling library for Go that simplifies error checking and handling of panics. Inspired by the `try-catch` pattern from other languages, this library allows you to streamline your code and reduce repetitive `if err != nil` blocks.
 
 ## Overview
 
-Go’s traditional approach to error handling, while explicit and predictable, can lead to verbose and cluttered code.
-Repeatedly checking for errors across multiple function calls can make code harder to read and maintain. Moreover,
-handling panics—whether from your own code or third-party libraries—requires extra care, and often leads to even more
-boilerplate code.
+Go’s traditional approach to error handling, while explicit and predictable, can lead to verbose and cluttered code. Repeatedly checking for errors across multiple function calls can make code harder to read and maintain. Moreover, handling panics—whether from your own code or third-party libraries—requires extra care, and often leads to even more boilerplate code.
 
-The **`try`** library addresses these issues by providing concise, readable functions to handle common error patterns
-and panic recovery.
+The **`try`** library addresses these issues by providing concise, readable functions to handle common error patterns and panic recovery.
 
 ## Features
 
@@ -33,27 +27,27 @@ Without **`try`**, error handling in Go looks like this:
 
 ```go
 func LoadJSON(rawURL string) (map[string]any, error) {
-resp, err := http.Get(rawURL)
-if err != nil {
-return nil, fmt.Errorf("failed to fetch data: %w", err)
-}
-defer resp.Body.Close()
+    resp, err := http.Get(rawURL)
+    if err != nil {
+        return nil, fmt.Errorf("failed to fetch data: %w", err)
+    }
+    defer resp.Body.Close()
 
-if resp.StatusCode != http.StatusOK {
-return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-}
+    if resp.StatusCode != http.StatusOK {
+        return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+    }
 
-data, err := io.ReadAll(resp.Body)
-if err != nil {
-return nil, fmt.Errorf("failed to read response body: %w", err)
-}
-
-var result map[string]any
-if err = json.Unmarshal(data, &result); err != nil {
-return nil, fmt.Errorf("failed to unmarshal response body: %w", err)
-}
-
-return result, nil
+    data, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return nil, fmt.Errorf("failed to read response body: %w", err)
+    }
+	
+    var result map[string]any
+    if err = json.Unmarshal(data, &result); err != nil {
+        return nil, fmt.Errorf("failed to unmarshal response body: %w", err)
+    }
+	
+    return result, nil
 }
 ```
 
@@ -61,15 +55,15 @@ With **`try`**, the code becomes much cleaner and easier to follow:
 
 ```go
 func LoadJSON(rawURL string) (result map[string]any, err error) {
-defer try.Catch(&err)
+    defer try.Catch(&err)
 
-resp := try.Val(http.Get(rawURL))
-try.Require(resp.StatusCode == http.StatusOK, "unexpected status code")
-defer resp.Body.Close()
+    resp := try.Val(http.Get(rawURL))
+    try.Require(resp.StatusCode == http.StatusOK, "unexpected status code")
+    defer resp.Body.Close()
 
-data := try.Val(io.ReadAll(resp.Body)
-try.Check(json.Unmarshal(data), &result))
-return
+    data := try.Val(io.ReadAll(resp.Body)
+    try.Check(json.Unmarshal(data), &result))
+    return
 }
 ```
 
@@ -85,6 +79,7 @@ data := try.Val(io.ReadAll(resp.Body))
 
 - **When to use:** For calls where you want the error to be handled automatically by the library.
 
+
 ### `try.Check(err error)`
 
 A simpler form of `Val`, `Check` takes only the error argument, and if the error is not `nil`, it panics.
@@ -93,8 +88,7 @@ A simpler form of `Val`, `Check` takes only the error argument, and if the error
 try.Check(err)
 ```
 
-- **When to use:** For quick, inline error handling when you don't need to capture the result, but just want to verify
-  that an error didn’t occur.
+- **When to use:** For quick, inline error handling when you don't need to capture the result, but just want to verify that an error didn’t occur.
 
 ### `try.Require(ok bool, err any)`
 
@@ -108,8 +102,7 @@ try.Require(resp.StatusCode == http.StatusOK, "unexpected status code")
 
 ### `try.Catch(pError *error)`
 
-Catch from any panic and converts it to an error. This function is typically used with `defer` to ensure the function
-returns an error instead of crashing.
+Catch from any panic and converts it to an error. This function is typically used with `defer` to ensure the function returns an error instead of crashing.
 
 ```go
 defer try.Catch(&err)
@@ -122,8 +115,8 @@ defer try.Catch(&err)
 Custom panic handler that allows you to log or process the error in a specific way before recovering.
 
 ```go
-defer try.Handle(func (err error) {
-log.Printf("An error occurred: %v", err)
+defer try.Handle(func(err error) {
+    log.Printf("An error occurred: %v", err)
 })
 ```
 
@@ -133,8 +126,7 @@ log.Printf("An error occurred: %v", err)
 
 - **Cleaner code:** Focus on your core logic instead of writing repetitive error checks.
 - **Improved readability:** Your code becomes more concise and easier to understand.
-- **Better panic management:** Automatically handle panics and convert them to errors, ensuring your application stays
-  stable.
+- **Better panic management:** Automatically handle panics and convert them to errors, ensuring your application stays stable.
 
 ## License
 
