@@ -12,7 +12,7 @@ The **`try`** library addresses these issues by providing concise, readable func
 
 - **Simplifies error handling** by automatically panicking on errors and recovering them in a structured way.
 - **Ensures clean code** without repetitive `if err != nil` checks.
-- **Easy panic recovery** with built-in `Recover` to convert panics into returned errors.
+- **Easy panic recovery** with built-in `Catch` to convert panics into returned errors.
 - **Custom error handling** with `Handle` for advanced error processing.
 
 ## Installation
@@ -69,7 +69,7 @@ func LoadJSON(rawURL string) (result map[string]any, err error) {
 
 ## Functions
 
-### `try.Val(val T, err error)`
+### `try.Val(value T, err error) T`
 
 Handles function calls that return an error. If the function returns an error, `Val` will panic.
 
@@ -80,7 +80,7 @@ data := try.Val(io.ReadAll(resp.Body))
 - **When to use:** For calls where you want the error to be handled automatically by the library.
 
 
-### `try.Check(err error)`
+### `try.Check(error)`
 
 A simpler form of `Val`, `Check` takes only the error argument, and if the error is not `nil`, it panics.
 
@@ -100,7 +100,7 @@ try.Require(resp.StatusCode == http.StatusOK, "unexpected status code")
 
 - **When to use:** For conditions that must be true for the program to continue.
 
-### `try.Catch(pError *error)`
+### `try.Catch(*error)`
 
 Catch from any panic and converts it to an error. This function is typically used with `defer` to ensure the function returns an error instead of crashing.
 
@@ -110,7 +110,7 @@ defer try.Catch(&err)
 
 - **When to use:** In functions where you want to ensure panics are caught and returned as errors.
 
-### `try.Handle(fn func(error))`
+### `try.Handle(handler func(error))`
 
 Custom panic handler that allows you to log or process the error in a specific way before recovering.
 
