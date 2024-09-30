@@ -58,11 +58,12 @@ func LoadJSON(rawURL string) (result map[string]any, err error) {
     defer try.Catch(&err)
 
     resp := try.Val(http.Get(rawURL))
-    try.Require(resp.StatusCode == http.StatusOK, "unexpected status code")
     defer resp.Body.Close()
 
+    try.Require(resp.StatusCode == http.StatusOK, "unexpected status code")
+
     data := try.Val(io.ReadAll(resp.Body)
-    try.Check(json.Unmarshal(data), &result))
+    try.Check(json.Unmarshal(data, &result))
     return
 }
 ```
@@ -79,13 +80,19 @@ data := try.Val(io.ReadAll(resp.Body))
 
 - **When to use:** For calls where you want the error to be handled automatically by the library.
 
+### `try.Val2(v1 T1, v2 T2, err error) (T1, T2)`
+
+```go
+buf := bufio.NewReader(os.Stdin)
+line, isPrefix := try.Val2(buf.ReadLine())
+```
 
 ### `try.Check(error)`
 
 A simpler form of `Val`, `Check` takes only the error argument, and if the error is not `nil`, it panics.
 
 ```go
-try.Check(err)
+try.Check(json.Unmarshal(data, v))
 ```
 
 - **When to use:** For quick, inline error handling when you don't need to capture the result, but just want to verify that an error didn’t occur.
@@ -105,7 +112,10 @@ try.Require(resp.StatusCode == http.StatusOK, "unexpected status code")
 Catch from any panic and converts it to an error. This function is typically used with `defer` to ensure the function returns an error instead of crashing.
 
 ```go
-defer try.Catch(&err)
+func Foo() (err error) {
+    defer try.Catch(&err)
+    ....
+}
 ```
 
 - **When to use:** In functions where you want to ensure panics are caught and returned as errors.
