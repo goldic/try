@@ -1,6 +1,6 @@
 # try
 
-A lightweight error-handling library for Go that simplifies error checking and handling of panics. Inspired by the `try-catch` pattern from other languages, this library allows you to streamline your code and reduce repetitive `if err != nil` blocks.
+A lightweight error-handling package for Go that simplifies error checking and handling of panics. Inspired by the `try-catch` pattern from other languages, this library allows you to streamline your code and reduce repetitive `if err != nil` blocks.
 
 ## Overview
 
@@ -70,65 +70,94 @@ func LoadJSON(rawURL string) (result map[string]any, err error) {
 
 ## Functions
 
-### `try.Val(value T, err error) T`
-
+### try.Val
+```go
+func Val(value T, err error) T
+```
 Handles function calls that return an error. If the function returns an error, `Val` will panic.
 
-```go
-data := try.Val(io.ReadAll(resp.Body))
-```
+- Example:
+    ```go
+    data := try.Val(io.ReadAll(resp.Body))
+    ```
 
 - **When to use:** For calls where you want the error to be handled automatically by the library.
 
-### `try.Val2(v1 T1, v2 T2, err error) (T1, T2)`
 
+### try.Val2, try.Val3
 ```go
-buf := bufio.NewReader(os.Stdin)
-line, isPrefix := try.Val2(buf.ReadLine())
+func Val2(v1 T1, v2 T2, err error) (T1, T2)
+func Val3(v1 T1, v2 T2, v3 T3, err error) (T1, T2, T3)
 ```
+Handles function calls that return an error. If err is not nil, the function will panic.
 
-### `try.Check(error)`
+- Example:
+    ```go
+    buf := bufio.NewReader(os.Stdin)
+    line, isPrefix := try.Val2(buf.ReadLine())
+    ```
 
+### try.Check
+```go
+func Check(err error)
+```
 A simpler form of `Val`, `Check` takes only the error argument, and if the error is not `nil`, it panics.
 
-```go
-try.Check(json.Unmarshal(data, v))
-```
+- Example:
+    ```go
+    try.Check(json.Unmarshal(data, v))
+    ```
 
 - **When to use:** For quick, inline error handling when you don't need to capture the result, but just want to verify that an error didn’t occur.
 
-### `try.Require(ok bool, err any)`
+
+### try.Require
+```go
+func Require(ok bool, err any)
+```
 
 Ensures that a condition is met. If the condition is false, it will panic with the provided message.
 
-```go
-try.Require(resp.StatusCode == http.StatusOK, "unexpected status code")
-```
+- Example:
+    ```go
+    try.Require(resp.StatusCode == http.StatusOK, "unexpected status code")
+    ```
 
 - **When to use:** For conditions that must be true for the program to continue.
 
-### `try.Catch(*error)`
+
+**Important:** Functions like `try.Check`, `try.Val`, `try.Val2`, `try.Val3`, and `try.Require` automatically add execution context when throwing a panic. The context includes the file name and line number where the error occurred, which greatly simplifies debugging. However, this also makes panic a heavier operation, which might affect performance in situations with frequent errors or high CPU load.
+
+
+### try.Catch
+```go
+func Catch(err *error)
+```
 
 Catch from any panic and converts it to an error. This function is typically used with `defer` to ensure the function returns an error instead of crashing.
 
-```go
-func Foo() (err error) {
-    defer try.Catch(&err)
-    ....
-}
-```
+- Example:
+    ```go
+    func Foo() (err error) {
+        defer try.Catch(&err)
+        // some code that might panic
+    }
+    ```
 
 - **When to use:** In functions where you want to ensure panics are caught and returned as errors.
 
-### `try.Handle(handler func(error))`
+### try.Handle
+```go
+func Handle(handler func(error))
+```
 
 Custom panic handler that allows you to log or process the error in a specific way before recovering.
-
-```go
-defer try.Handle(func(err error) {
-    log.Printf("An error occurred: %v", err)
-})
-```
+- Example:
+    ```go
+    defer try.Handle(func(err error) {
+        log.Printf("An error occurred: %v", err)
+    })
+    ```
 
 - **When to use:** When you want to do custom logging or processing of errors when a panic occurs.
 
