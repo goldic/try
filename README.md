@@ -161,6 +161,62 @@ Custom panic handler that allows you to log or process the error in a specific w
 
 - **When to use:** When you want to do custom logging or processing of errors when a panic occurs.
 
+### try.Mute
+```go
+func Mute()
+```
+Used in conjunction with `defer`, `try.Mute` ignores all panics in the code block it is applied to. It's useful when you want to ensure a function doesn't panic, no matter what happens.
+
+- Example:
+    ```go
+    func foo() {
+        defer try.Mute()
+        // some code that might panic
+    }
+    ```
+
+### try.Call
+```go
+func Call(fn func()) error
+```
+
+Executes any function and returns an error if a panic occurs within that function. This is handy for encapsulating code that might throw a panic into something that returns a recoverable error.
+- Example:
+    ```go
+    err := try.Call(func() {
+        // some code that might panic
+    })
+    if err != nil {
+        log.Printf("Error: %v", err)
+    }
+    ```
+
+### try.Go
+```go
+func Go(fn func())
+```
+Runs a goroutine safely. If a panic occurs within the goroutine, the program doesn't crash, and the panic is handled gracefully. Ideal for avoiding crashes in concurrent code.
+- Example:
+    ```go
+    try.Go(func() {
+        // some goroutine logic
+    })
+    ```
+
+### try.Async
+```go
+func Async(fn ...func()) error
+```
+
+Executes multiple functions in parallel and waits for all of them to complete. If any of the functions panic, it returns the combined error from all panics. This is especially useful for concurrent operations where error handling is necessary.
+- Example:
+    ```go
+    err := try.Async(loadData1, loadData2, loadData3)
+    if err != nil {
+        log.Printf("Error(s) occurred: %v", err)
+    }
+    ```
+
 ## Why Use `try`?
 
 - **Cleaner code:** Focus on your core logic instead of writing repetitive error checks.
