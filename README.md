@@ -121,6 +121,8 @@ Ensures that a condition is met. If the condition is false, it will panic with t
 - Example:
     ```go
     try.Require(resp.StatusCode == http.StatusOK, "unexpected status code")
+  
+    try.Require(resp.Header.Get("Content-Type") == "application/json", errUnexpectedContentType)
     ```
 
 - **When to use:** For conditions that must be true for the program to continue.
