@@ -118,6 +118,15 @@ func Async(fn ...func()) (err error) {
 	return
 }
 
+// AsyncForEach asynchronously runs fn for each element of slice, returns an error in case of panic.
+func AsyncForEach[T any, E ~[]T](slice E, fn func(T)) error {
+	ff := make([]func(), len(slice))
+	for i, v := range slice {
+		ff[i] = func() { fn(v) }
+	}
+	return Async(ff...)
+}
+
 func toError(err any) error {
 	if e, ok := err.(error); ok {
 		return e
