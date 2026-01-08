@@ -96,38 +96,45 @@ func Go(fn func()) {
 	go Call(fn)
 }
 
-// Async asynchronously runs several functions and waits for them to complete, returns an error in case of panic.
-func Async(fn ...func()) (err error) {
+// Await asynchronously runs several functions and waits for them to complete, returns an error in case of panic.
+func Await(fn ...func()) error {
+	n := len(fn)
+	if n == 0 {
+		return nil
+	} else if n == 1 {
+		return Call(fn[0])
+	}
 	var wg sync.WaitGroup
-	wg.Add(len(fn))
-	var mxErr sync.Mutex
-	for _, f := range fn {
-		go func(fn func()) {
+	wg.Add(n)
+	errs := make([]error, n)
+	for i := range fn {
+		go func(i int) {
 			defer wg.Done()
 			defer func() {
 				if r := recover(); r != nil {
-					mxErr.Lock()
-					defer mxErr.Unlock()
-					err = joinErrors(err, toError(r))
+					errs[i] = toError(r)
 				}
 			}()
-			fn()
-		}(f)
+			fn[i]()
+		}(i)
 	}
 	wg.Wait()
-	return
+	return errors.Join(errs...)
 }
 
-// AsyncForEach asynchronously runs fn for each element of slice, returns an error in case of panic.
-func AsyncForEach[T any, E ~[]T](slice E, fn func(T, int)) error {
+// AwaitForEach asynchronously runs fn for each element of slice, returns an error in case of panic.
+func AwaitForEach[T any, E ~[]T](slice E, fn func(T, int)) error {
 	ff := make([]func(), len(slice))
 	for i, v := range slice {
 		ff[i] = func() { fn(v, i) }
 	}
-	return Async(ff...)
+	return Await(ff...)
 }
 
 func toError(err any) error {
+	if err == nil {
+		return nil
+	}
 	if e, ok := err.(error); ok {
 		return e
 	}
